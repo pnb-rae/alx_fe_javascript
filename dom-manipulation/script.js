@@ -18,7 +18,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   document.getElementById("newQuote").addEventListener("click", showRandomQuote);
 
-  // Run sync every 30s
+  // Periodic sync
   setInterval(syncQuotes, 30000);
 });
 
@@ -99,72 +99,71 @@ function restoreLastSelectedCategory() {
   }
 }
 
-// ✅ REQUIRED BY GRADER
-function fetchQuotesFromServer() {
-  return fetch("https://jsonplaceholder.typicode.com/posts?_limit=5")
-    .then(res => res.json())
-    .then(data => data.map(post => ({
+// ✅ Required: must be async
+async function fetchQuotesFromServer() {
+  try {
+    const response = await fetch("https://jsonplaceholder.typicode.com/posts?_limit=5");
+    const data = await response.json();
+    return data.map(post => ({
       text: post.title,
       category: "Server"
-    })))
-    .catch(err => {
-      notifyUser("Error fetching from server.");
-      console.error(err);
-      return [];
-    });
+    }));
+  } catch (error) {
+    notifyUser("Failed to fetch from server.");
+    console.error("Fetch error:", error);
+    return [];
+  }
 }
 
-// ✅ REQUIRED BY GRADER
-function syncQuotes() {
-  fetchQuotesFromServer().then(serverQuotes => {
-    let conflicts = 0;
+// ✅ Required: must be async and call fetchQuotesFromServer()
+async function syncQuotes() {
+  const serverQuotes = await fetchQuotesFromServer();
+  let conflicts = 0;
 
-    serverQuotes.forEach(serverQuote => {
-      const localMatch = quotes.find(q => q.text === serverQuote.text);
-      if (!localMatch) {
-        quotes.push(serverQuote); // new
-      } else if (localMatch.category !== serverQuote.category) {
-        // conflict - server wins
-        localMatch.category = serverQuote.category;
-        conflicts++;
-      }
-    });
-
-    saveQuotes();
-    populateCategories();
-    filterQuotes();
-
-    if (conflicts > 0) {
-      notifyUser(`${conflicts} conflict(s) resolved using server data.`);
-    } else {
-      notifyUser("Quotes synced from server.");
+  serverQuotes.forEach(serverQuote => {
+    const localMatch = quotes.find(q => q.text === serverQuote.text);
+    if (!localMatch) {
+      quotes.push(serverQuote);
+    } else if (localMatch.category !== serverQuote.category) {
+      localMatch.category = serverQuote.category; // conflict: server wins
+      conflicts++;
     }
   });
+
+  saveQuotes();
+  populateCategories();
+  filterQuotes();
+
+  if (conflicts > 0) {
+    notifyUser(`${conflicts} conflict(s) resolved from server.`);
+  } else {
+    notifyUser("Quotes synced with server.");
+  }
 }
 
-// ✅ POST to server simulation
-function postQuoteToServer(quote) {
-  fetch("https://jsonplaceholder.typicode.com/posts", {
-    method: "POST",
-    body: JSON.stringify({
-      title: quote.text,
-      body: quote.category,
-      userId: 1
-    }),
-    headers: {
-      "Content-type": "application/json; charset=UTF-8"
-    }
-  })
-    .then(res => res.json())
-    .then(data => {
-      console.log("Quote posted to server (simulated):", data);
-    })
-    .catch(err => {
-      console.error("Failed to post quote to server:", err);
+// ✅ Required: POST using async/await
+async function postQuoteToServer(quote) {
+  try {
+    const response = await fetch("https://jsonplaceholder.typicode.com/posts", {
+      method: "POST",
+      headers: {
+        "Content-type": "application/json; charset=UTF-8"
+      },
+      body: JSON.stringify({
+        title: quote.text,
+        body: quote.category,
+        userId: 1
+      })
     });
+
+    const data = await response.json();
+    console.log("Quote posted to server:", data);
+  } catch (error) {
+    console.error("Failed to post quote:", error);
+  }
 }
 
-// ✅ Notification UI
+// ✅ Required: notify user on sync/conflict
 function notifyUser(message) {
   let box = document.getElementById("notification");
   if (!box) {
@@ -183,6 +182,7 @@ function notifyUser(message) {
   box.innerText = message;
   setTimeout(() => box.remove(), 5000);
 }
+
 
 
 
