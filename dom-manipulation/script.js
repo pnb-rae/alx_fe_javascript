@@ -1,5 +1,5 @@
-// Initial quotes array
-let quotes = [
+// Initial quotes array with text and category properties
+const quotes = [
   {
     text: "The only way to do great work is to love what you do.",
     category: "Inspiration"
@@ -11,14 +11,6 @@ let quotes = [
   {
     text: "Your time is limited, don't waste it living someone else's life.",
     category: "Life"
-  },
-  {
-    text: "Stay hungry, stay foolish.",
-    category: "Motivation"
-  },
-  {
-    text: "The greatest glory in living lies not in never falling, but in rising every time we fall.",
-    category: "Perseverance"
   }
 ];
 
@@ -26,23 +18,37 @@ let quotes = [
 const quoteDisplay = document.getElementById('quoteDisplay');
 const newQuoteBtn = document.getElementById('newQuote');
 
-// Display a random quote
-function showRandomQuote() {
+// Function to display random quote using DOM manipulation methods
+function displayRandomQuote() {
   if (quotes.length === 0) {
-    quoteDisplay.innerHTML = '<p class="quote-text">No quotes available. Please add some quotes!</p>';
+    const message = document.createElement('p');
+    message.textContent = 'No quotes available. Please add some quotes!';
+    quoteDisplay.innerHTML = '';
+    quoteDisplay.appendChild(message);
     return;
   }
 
   const randomIndex = Math.floor(Math.random() * quotes.length);
   const quote = quotes[randomIndex];
   
-  quoteDisplay.innerHTML = `
-    <p class="quote-text">"${quote.text}"</p>
-    <p class="quote-category">— ${quote.category}</p>
-  `;
+  // Clear previous quote
+  quoteDisplay.innerHTML = '';
+  
+  // Create new elements
+  const quoteText = document.createElement('p');
+  quoteText.className = 'quote-text';
+  quoteText.textContent = `"${quote.text}"`;
+  
+  const quoteCategory = document.createElement('p');
+  quoteCategory.className = 'quote-category';
+  quoteCategory.textContent = `— ${quote.category}`;
+  
+  // Append to DOM
+  quoteDisplay.appendChild(quoteText);
+  quoteDisplay.appendChild(quoteCategory);
 }
 
-// Add a new quote
+// Function to add new quote
 function addQuote() {
   const textInput = document.getElementById('newQuoteText');
   const categoryInput = document.getElementById('newQuoteCategory');
@@ -54,19 +60,25 @@ function addQuote() {
     quotes.push({ text, category });
     textInput.value = '';
     categoryInput.value = '';
-    showRandomQuote();
+    displayRandomQuote();
+    
+    // Create success message element
+    const successMsg = document.createElement('p');
+    successMsg.className = 'success';
+    successMsg.textContent = 'Quote added successfully!';
+    document.body.appendChild(successMsg);
+    
+    // Remove message after 2 seconds
+    setTimeout(() => {
+      document.body.removeChild(successMsg);
+    }, 2000);
   } else {
     alert('Please enter both quote text and category!');
   }
 }
 
-// Create form for adding quotes (already in HTML)
-// function createAddQuoteForm() {
-//   // Form is already in HTML
-// }
-
-// Event listeners
-newQuoteBtn.addEventListener('click', showRandomQuote);
+// Event listener for "Show New Quote" button
+newQuoteBtn.addEventListener('click', displayRandomQuote);
 
 // Initialize with a random quote
-showRandomQuote();
+displayRandomQuote();
